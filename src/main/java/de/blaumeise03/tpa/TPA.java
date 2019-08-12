@@ -19,12 +19,9 @@
 package de.blaumeise03.tpa;
 
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
@@ -32,7 +29,9 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class TPA extends JavaPlugin {
@@ -87,7 +86,15 @@ public class TPA extends JavaPlugin {
                     sender.sendMessage("§4Der Spieler befindet sich in einer anderen Dimension!");
                     return;
                 }
-
+                for (TPARequest request : requestMap.values()) {
+                    if (request.getSenderPlayer() == sender && request.getTargetPlayer() == player) {
+                        if (new Date().getTime() <= 60000) {
+                            sender.sendMessage("§4Du hast bereits eine Anfrage geschickt!");
+                            return;
+                        }
+                        requestMap.remove(player);
+                    }
+                }
                 //player.sendRawMessage("[\"\",{\"text\":\"" + playerSender.getName() +"\",\"color\":\"dark_green\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"\",\"extra\":[{\"text\":\"" + playerSender.getUniqueId().toString() + "\",\"color\":\"dark_aqua\"}]}}},{\"text\":\" möchte sich zu dir teleportieren. \",\"color\":\"green\"},{\"text\":\"[Annehmen]\",\"color\":\"dark_green\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/tpaAccept " + playerSender.getName() +"\"}},{\"text\":\"  \",\"color\":\"none\"},{\"text\":\"[Ablehnen]\",\"color\":\"dark_red\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/tpaDeny " + playerSender.getName() +"\"}}]");
                 TextComponent msg1 = new TextComponent(playerSender.getName());
                 msg1.setColor(ChatColor.AQUA);
@@ -130,12 +137,12 @@ public class TPA extends JavaPlugin {
                     sender.sendMessage("§4Die Anfrage ist abgelaufen!");
                 }else if(request.getLastDamage() == -1 || (request.getLastDamage() - time.getTime() > 10000)){
                     player.teleport(((Player) sender));
-                    sender.sendMessage("§aDu wurdest erfolgreich teleportiert!");
-                    player.sendMessage("§aDer Spieler §6" + sender.getName() + " §ahat sich zu dir teleportiert!");
-                    getLogger().info("Der Spieler " + sender.getName() + " hat sich zum Spieler " + player.getName() + " teleportiert!");
+                    player.sendMessage("§aDu wurdest erfolgreich teleportiert!");
+                    sender.sendMessage("§aDer Spieler §6" + player.getName() + " §ahat sich zu dir teleportiert!");
+                    getLogger().info("Der Spieler " + player.getName() + " hat sich zum Spieler " + sender.getName() + " teleportiert!");
                     requestMap.remove(sender);
                 }else if ((request.getLastDamage() - time.getTime() < 10000)){
-                    sender.sendMessage("§aDu wirst in 5 Sekunden teleportiert. Beweg dich nicht!");
+                    player.sendMessage("§aDu wirst in 5 Sekunden teleportiert. Beweg dich nicht!");
                     request.setCountdown(true);
                     Bukkit.getScheduler().runTaskTimer(TPA.plugin, new Runnable() {
                         int i = 5;
@@ -167,7 +174,19 @@ public class TPA extends JavaPlugin {
         new Command("tpaDeny", "Lehn eine Teleportanfrage ab.", new Permission("tpa.tpa"), true){
             @Override
             public void onCommand(String[] args, CommandSender sender){
-
+                TPARequest request = requestMap.get((Player) sender);
+                if (request == null) {
+                    sender.sendMessage("§4Es steht keine Anfrage von diesem Spieler aus!");
+                    return;
+                }
+                if (new Date().getTime() - request.time > 60000) {
+                    sender.sendMessage("§aDiese Anfrage ist bereits ausgelaufen!");
+                    requestMap.remove((Player) sender);
+                    return;
+                }
+                sender.sendMessage("§aAnfrage abgelehnt!");
+                requestMap.remove((Player) sender);
+                request.getSenderPlayer().sendMessage("§4Deine Anfrage wurde von §6" + sender.getName() + " §4abgelehnt!");
             }
         };
 

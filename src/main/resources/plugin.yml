@@ -1,6 +1,6 @@
 name: tpa
 main: de.blaumeise03.tpa.TPA
-version: 0.0-Snapshot
+version: 1.0-Release
 
 commands:
   tpa:

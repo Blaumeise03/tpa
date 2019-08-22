@@ -95,13 +95,17 @@ public class TPA extends JavaPlugin {
                         requestMap.remove(player);
                     }
                 }
+                if (player == playerSender) {
+                    sender.sendMessage("§4Tut mir leid. Du kannst dich nicht zu dir selbst teleportieren.");
+                    return;
+                }
                 //player.sendRawMessage("[\"\",{\"text\":\"" + playerSender.getName() +"\",\"color\":\"dark_green\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"\",\"extra\":[{\"text\":\"" + playerSender.getUniqueId().toString() + "\",\"color\":\"dark_aqua\"}]}}},{\"text\":\" möchte sich zu dir teleportieren. \",\"color\":\"green\"},{\"text\":\"[Annehmen]\",\"color\":\"dark_green\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/tpaAccept " + playerSender.getName() +"\"}},{\"text\":\"  \",\"color\":\"none\"},{\"text\":\"[Ablehnen]\",\"color\":\"dark_red\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/tpaDeny " + playerSender.getName() +"\"}}]");
                 TextComponent msg1 = new TextComponent(playerSender.getName());
                 msg1.setColor(ChatColor.AQUA);
                 TextComponent msg2 = new TextComponent(" will sich zu dir teleportieren! ");
                 msg2.setColor(ChatColor.GREEN);
                 msg1.addExtra(msg2);
-                TextComponent msg3 = new TextComponent("[Annehmen]");
+                TextComponent msg3 = new TextComponent("[Annehmen] ");
                 msg3.setColor(ChatColor.DARK_GREEN);
                 msg3.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaAccept " + playerSender.getName()));
                 msg1.addExtra(msg3);

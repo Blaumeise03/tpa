@@ -28,6 +28,7 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -130,14 +131,14 @@ public class TPA extends JavaPlugin {
                     sender.sendMessage("§aDieser Spieler ist nicht mehr online!");
                     return;
                 }
-                TPARequest request = requestMap.get((Player) sender);
+                TPARequest request = requestMap.get(sender);
                 if(request == null){
                     sender.sendMessage("§4Keine Offene Anfrage von diesem Spieler!");
                     return;
                 }
                 Date time = new Date();
                 if(time.getTime() - request.time > 60000){
-                    requestMap.remove((Player) sender);
+                    requestMap.remove(sender);
                     sender.sendMessage("§4Die Anfrage ist abgelaufen!");
                 }else if(request.getLastDamage() == -1 || (request.getLastDamage() - time.getTime() > 10000)){
                     player.teleport(((Player) sender));
@@ -145,31 +146,35 @@ public class TPA extends JavaPlugin {
                     sender.sendMessage("§aDer Spieler §6" + player.getName() + " §ahat sich zu dir teleportiert!");
                     getLogger().info("Der Spieler " + player.getName() + " hat sich zum Spieler " + sender.getName() + " teleportiert!");
                     requestMap.remove(sender);
-                }else if ((request.getLastDamage() - time.getTime() < 10000)){
+                } else if ((request.getLastDamage() - time.getTime() < 60000)) {
                     player.sendMessage("§aDu wirst in 5 Sekunden teleportiert. Beweg dich nicht!");
                     request.setCountdown(true);
-                    Bukkit.getScheduler().runTaskTimer(TPA.plugin, new Runnable() {
+                    new BukkitRunnable() {
                         int i = 5;
 
                         @Override
                         public void run() {
                             i--;
-                            if(i < 0) return;
+                            if (i < 0) {
+                                cancel();
+                                return;
+                            }
                             player.sendMessage("§6" + i + (i <= 1 ? " Sekunde " : " Sekunden ") + "§abis zum Teleport!");
                             if(i == 0){
 
                                 if(!requestMap.containsKey(sender)){
                                     player.sendMessage("§4Du hast dich bewegt! Teleport abgebrochen!");
+                                    cancel();
                                     return;
                                 }
                                 player.teleport(((Player) sender));
                                 player.sendMessage("§aDu wurdest teleportiert!");
                                 sender.sendMessage("§6" + player.getName() + " §ahat sich zu dir teleportiert!");
                                 getLogger().info("Der Spieler " + sender.getName() + " hat sich zum Spieler " + player.getName() + " teleportiert!");
-                                return;
+                                cancel();
                             }
                         }
-                    }, 20, 20);
+                    }.runTaskTimer(TPA.plugin, 20, 20);
                 }
 
             }
@@ -178,18 +183,18 @@ public class TPA extends JavaPlugin {
         new Command("tpaDeny", "Lehn eine Teleportanfrage ab.", new Permission("tpa.tpa"), true){
             @Override
             public void onCommand(String[] args, CommandSender sender){
-                TPARequest request = requestMap.get((Player) sender);
+                TPARequest request = requestMap.get(sender);
                 if (request == null) {
                     sender.sendMessage("§4Es steht keine Anfrage von diesem Spieler aus!");
                     return;
                 }
                 if (new Date().getTime() - request.time > 60000) {
                     sender.sendMessage("§aDiese Anfrage ist bereits ausgelaufen!");
-                    requestMap.remove((Player) sender);
+                    requestMap.remove(sender);
                     return;
                 }
                 sender.sendMessage("§aAnfrage abgelehnt!");
-                requestMap.remove((Player) sender);
+                requestMap.remove(sender);
                 request.getSenderPlayer().sendMessage("§4Deine Anfrage wurde von §6" + sender.getName() + " §4abgelehnt!");
             }
         };

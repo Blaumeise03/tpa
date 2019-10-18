@@ -9,10 +9,13 @@ website: http://blaumeise03.de/
 commands:
   tpa:
     description: Stell eine Teleportanfrage zu einem Spieler.
+    permission: tpa.tpa
   tpaAccept:
     description: Akzeptiere eine Anfrage.
+    permission: tpa.tpa
   tpaDeny:
     description: Lehne eine Anfrage ab.
+    permission: tpa.tpa
 permissions:
   tpa.tpa:
     description: Berechtingung für /tpa /tpaAccept und /tpaDeny
